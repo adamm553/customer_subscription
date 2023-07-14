@@ -1,0 +1,99 @@
+---
+title: "Projekt - Adam Piatek"
+author: "Adam Piatek"
+date: "2023-04-16"
+output:
+  html_document: default
+  'html_document: default': default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Czyszczenie danych
+```{r}
+dane <- read.csv(file = '/Users/adam/Desktop/4_semestr/Analiza_strukturalna_zbiorów_danych/rintro-chapter5.csv',
+                 sep=",", quote = "")
+head(dane)
+# Jakosc danych jest slaba. W nazwach kolumn występują niepotrzebne znaki. 
+# Zmienna 'age', z powodu występowania pojedyńczego apostrofu, ma zły format. 
+# Zmienna ta jest też zmienną zmiennoprzecinkową, a powinna być liczbą całkowitą. 
+# W reszcie zmiennych występują podwójne apostrofy. 
+# W zmiennych ownHome oraz subscribe występują niepotrzebne przedrostki. 
+```
+```{r}
+#Kody, który poprawia wyżej wymienione błedy.
+colnames(dane) <- c('age', 'gender', 'income', 'kids', 'ownHome', 'subscribe', 'segment')
+dane$gender <- gsub('"', "", as.character(dane$gender))
+dane$age <- gsub('"', "", as.character(dane$age))
+dane$ownHome <- gsub('"', "", as.character(dane$ownHome))
+dane$subscribe <- gsub('"', "", as.character(dane$subscribe))
+dane$segment <- gsub('"', "", as.character(dane$segment))
+dane$ownHome <- gsub('own', "", as.character(dane$ownHome))
+dane$subscribe <- gsub('sub', "", as.character(dane$subscribe))
+dane$age <- as.numeric(dane$age)
+dane$age <- round(dane$age)
+head(dane, 5)
+```
+## Sprawdzanie jakości danych
+```{r}
+#W zbiorze nie ma żadnych braków danych
+sum(is.na(dane))
+```
+```{r}
+# Sprawdzanie wartości odstających
+boxplot(dane$age, ylim=c(10,90))
+# W zmiennej 'age' nie występują żadne nietypowe, ani odstające dane
+```
+```{r}
+boxplot(dane$kids)
+#W zmiennej 'kids' odstający danymi są 6 i 7, jednak nie są to wartości nietypowe.
+```
+```{r}
+options(scipen=999)
+boxplot(dane$income)
+#W zmiennej 'income' występują wartości poniżej 0. Dla ułatwienia późniejszej 
+#analizy, dane zostaną zmienione na medianę wszystkich wartości kolumny 'income'.
+```
+```{r}
+dane$income[dane$income<0] <- median(dane$income)
+dane[dane$income < 0,]
+```
+```{r}
+unique(dane$gender)
+unique(dane$ownHome)
+unique(dane$subscribe)
+unique(dane$segment)
+# W kolumnach tekstowych nie występują żadne nietypowe wartości
+```
+
+## Analiza danych
+### Badanie różnicy średnich przychodów, w zależności od liczby dzieci
+H0 - średnie przychodów są podobne
+H1 - średnie przychodów znacząco się od siebie różnią
+```{r}
+kruskal.test(income ~ kids, data=dane)
+```
+```{r}
+boxplot(dane$income~dane$kids)
+```
+
+```{r}
+pairwise.wilcox.test(dane$income,dane$kids,p.adjust.method = "BH")
+```
+Wysoki poziom p-value wksazuje na niewielką różnicę w średnich
+
+
+### Zależność pomiędzy przychodem, a liczbą dzieci
+H0 - Istnieje związek pomiędzy przychodem, a liczbą dzieci
+H1 - Związek pomiędzy przychodem, a liczbą dzieci nie istnieje
+```{r}
+chisq.test(dane$segment, dane$income)
+```
+Współczynnik p-value jest na wysokim pozomie 0.4375, co oznacza że pomiędzy
+badanymi wartościami nie ma zależności. Hipotoza H0 jest odrzucana.
+
+
+
+

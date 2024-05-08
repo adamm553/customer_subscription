@@ -1,5 +1,5 @@
 ---
-title: "Projekt - Adam Piatek"
+title: "Customer Subscription"
 author: "Adam Piatek"
 date: "2023-04-16"
 output:
